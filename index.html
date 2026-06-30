@@ -1,0 +1,157 @@
+import React, { useState, useMemo } from 'react';
+
+const ORDERS = [
+  { category: 'Electronics', region: 'West Africa', revenue: 284500, units: 412, returns: 18, month: 'Apr' },
+  { category: 'Fashion', region: 'West Africa', revenue: 142300, units: 980, returns: 64, month: 'Apr' },
+  { category: 'Home & Living', region: 'East Africa', revenue: 96200, units: 340, returns: 12, month: 'Apr' },
+  { category: 'Electronics', region: 'East Africa', revenue: 118900, units: 201, returns: 9, month: 'May' },
+  { category: 'Fashion', region: 'Europe', revenue: 211400, units: 1240, returns: 102, month: 'May' },
+  { category: 'Beauty', region: 'West Africa', revenue: 87600, units: 760, returns: 31, month: 'May' },
+  { category: 'Electronics', region: 'Europe', revenue: 356200, units: 480, returns: 22, month: 'Jun' },
+  { category: 'Home & Living', region: 'West Africa', revenue: 134800, units: 410, returns: 15, month: 'Jun' },
+  { category: 'Beauty', region: 'East Africa', revenue: 64300, units: 590, returns: 19, month: 'Jun' },
+  { category: 'Fashion', region: 'East Africa', revenue: 98700, units: 670, returns: 48, month: 'Jun' },
+];
+
+function sum(rows, key) { return rows.reduce((a, r) => a + r[key], 0); }
+function aggregate(rows, key, valKey) {
+  const m = {};
+  rows.forEach(r => { m[r[key]] = (m[r[key]] || 0) + r[valKey]; });
+  return Object.entries(m).map(([k, v]) => ({ key: k, value: v })).sort((a, b) => b.value - a.value);
+}
+function fmt(n) { return '$' + n.toLocaleString(); }
+
+export default function EcommerceDashboard() {
+  const [region, setRegion] = useState('All');
+  const regions = ['All', ...Array.from(new Set(ORDERS.map(o => o.region)))];
+
+  const filtered = useMemo(
+    () => region === 'All' ? ORDERS : ORDERS.filter(o => o.region === region),
+    [region]
+  );
+
+  const totalRevenue = sum(filtered, 'revenue');
+  const totalUnits = sum(filtered, 'units');
+  const totalReturns = sum(filtered, 'returns');
+  const returnRate = totalUnits ? totalReturns / totalUnits : 0;
+  const aov = totalUnits ? totalRevenue / totalUnits : 0;
+
+  const byCategory = aggregate(filtered, 'category', 'revenue');
+  const byMonth = aggregate(filtered, 'month', 'revenue');
+  const monthOrder = ['Apr', 'May', 'Jun'];
+  const byMonthOrdered = monthOrder.map(m => byMonth.find(b => b.key === m) || { key: m, value: 0 });
+  const maxCat = Math.max(...byCategory.map(c => c.value), 1);
+  const maxMonth = Math.max(...byMonthOrdered.map(m => m.value), 1);
+
+  const returnHealth = returnRate < 0.05 ? '#5B8A72' : returnRate < 0.09 ? '#C9A23D' : '#B5453A';
+
+  return (
+    <div style={{ background: '#F7F5F0', minHeight: '100vh', fontFamily: "'Inter', system-ui, sans-serif", color: '#1E2A28', padding: '26px 18px 60px' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+        .num2 { font-family: 'Space Mono', monospace; }
+        .card2 { background: #FFFFFF; border: 1px solid #E4E0D6; border-radius: 8px; }
+        .bar2 { transition: width 0.6s ease; }
+        .pill2 { transition: all 0.15s ease; }
+      `}</style>
+
+      <div style={{ marginBottom: 22, borderBottom: '2px solid #1E2A28', paddingBottom: 14 }}>
+        <div className="num2" style={{ fontSize: 11, color: '#6B7270', letterSpacing: 1.5, textTransform: 'uppercase' }}>
+          Q2 Performance Review
+        </div>
+        <h1 style={{ fontSize: 25, fontWeight: 800, margin: '4px 0 0', letterSpacing: -0.4 }}>
+          Sales &amp; Returns Overview
+        </h1>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
+        {regions.map(r => (
+          <button
+            key={r}
+            onClick={() => setRegion(r)}
+            className="pill2"
+            style={{
+              padding: '6px 13px', borderRadius: 6, fontSize: 12.5, fontWeight: 600,
+              border: region === r ? '1.5px solid #1E2A28' : '1px solid #D6D1C3',
+              background: region === r ? '#1E2A28' : 'transparent',
+              color: region === r ? '#F7F5F0' : '#4A5250', cursor: 'pointer'
+            }}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+
+      {/* Hero KPI */}
+      <div className="card2" style={{ padding: '20px 16px', marginBottom: 10 }}>
+        <div style={{ fontSize: 11, color: '#6B7270', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>
+          Total Revenue
+        </div>
+        <div className="num2" style={{ fontSize: 42, fontWeight: 700, lineHeight: 1, color: '#1E2A28' }}>
+          {fmt(totalRevenue)}
+        </div>
+        <div style={{ display: 'flex', gap: 22, marginTop: 14, paddingTop: 14, borderTop: '1px solid #E4E0D6' }}>
+          <div>
+            <div className="num2" style={{ fontSize: 16, fontWeight: 700, color: '#1E2A28' }}>{totalUnits.toLocaleString()}</div>
+            <div style={{ fontSize: 10.5, color: '#6B7270' }}>Units sold</div>
+          </div>
+          <div>
+            <div className="num2" style={{ fontSize: 16, fontWeight: 700, color: '#1E2A28' }}>{fmt(Math.round(aov))}</div>
+            <div style={{ fontSize: 10.5, color: '#6B7270' }}>Avg order value</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Return rate insight card */}
+      <div className="card2" style={{ padding: '15px 16px', marginBottom: 14, borderLeft: `4px solid ${returnHealth}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: 10.5, color: '#6B7270', textTransform: 'uppercase', letterSpacing: 1 }}>Return Rate</div>
+            <div style={{ fontSize: 11.5, color: '#8A9290', marginTop: 2 }}>{totalReturns.toLocaleString()} units returned</div>
+          </div>
+          <div className="num2" style={{ fontSize: 22, fontWeight: 700, color: returnHealth }}>
+            {(returnRate * 100).toFixed(1)}%
+          </div>
+        </div>
+      </div>
+
+      {/* Revenue by month */}
+      <div className="card2" style={{ padding: '16px 14px', marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: '#6B7270', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>Revenue by Month</div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, height: 100 }}>
+          {byMonthOrdered.map((m, i) => (
+            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <div className="num2" style={{ fontSize: 10, color: '#6B7270' }}>{Math.round(m.value / 1000)}k</div>
+              <div className="bar2" style={{
+                width: '100%', height: `${(m.value / maxMonth) * 70}px`,
+                background: i === byMonthOrdered.length - 1 ? '#2F5D4F' : '#A8C4B8',
+                borderRadius: '4px 4px 0 0'
+              }} />
+              <div style={{ fontSize: 11, color: '#4A5250', fontWeight: 600 }}>{m.key}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* By category */}
+      <div className="card2" style={{ padding: '16px 14px', marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: '#6B7270', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Revenue by Category</div>
+        {byCategory.map((c, i) => (
+          <div key={i} style={{ marginBottom: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 4 }}>
+              <span style={{ fontWeight: 500 }}>{c.key}</span>
+              <span className="num2" style={{ color: '#6B7270' }}>{fmt(c.value)}</span>
+            </div>
+            <div style={{ height: 7, background: '#EDEAE1', borderRadius: 4 }}>
+              <div className="bar2" style={{ height: '100%', width: `${(c.value / maxCat) * 100}%`, background: '#2F5D4F', borderRadius: 4 }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 18, fontSize: 11, color: '#9C9485', textAlign: 'center' }}>
+        Sample data for portfolio demonstration · built by JayVirtual
+      </div>
+    </div>
+  );
+}
