@@ -1,4 +1,17 @@
-import React, { useState, useMemo } from 'react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>E-commerce Sales & Returns Dashboard</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body style="margin:0;">
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo } = React;
 
 const ORDERS = [
   { category: 'Electronics', region: 'West Africa', revenue: 284500, units: 412, returns: 18, month: 'Apr' },
@@ -21,7 +34,7 @@ function aggregate(rows, key, valKey) {
 }
 function fmt(n) { return '$' + n.toLocaleString(); }
 
-export default function EcommerceDashboard() {
+function EcommerceDashboard() {
   const [region, setRegion] = useState('All');
   const regions = ['All', ...Array.from(new Set(ORDERS.map(o => o.region)))];
 
@@ -82,7 +95,6 @@ export default function EcommerceDashboard() {
         ))}
       </div>
 
-      {/* Hero KPI */}
       <div className="card2" style={{ padding: '20px 16px', marginBottom: 10 }}>
         <div style={{ fontSize: 11, color: '#6B7270', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>
           Total Revenue
@@ -102,7 +114,6 @@ export default function EcommerceDashboard() {
         </div>
       </div>
 
-      {/* Return rate insight card */}
       <div className="card2" style={{ padding: '15px 16px', marginBottom: 14, borderLeft: `4px solid ${returnHealth}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
@@ -115,7 +126,6 @@ export default function EcommerceDashboard() {
         </div>
       </div>
 
-      {/* Revenue by month */}
       <div className="card2" style={{ padding: '16px 14px', marginBottom: 14 }}>
         <div style={{ fontSize: 11, color: '#6B7270', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>Revenue by Month</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, height: 100 }}>
@@ -133,7 +143,6 @@ export default function EcommerceDashboard() {
         </div>
       </div>
 
-      {/* By category */}
       <div className="card2" style={{ padding: '16px 14px', marginBottom: 14 }}>
         <div style={{ fontSize: 11, color: '#6B7270', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Revenue by Category</div>
         {byCategory.map((c, i) => (
@@ -155,3 +164,8 @@ export default function EcommerceDashboard() {
     </div>
   );
 }
+
+ReactDOM.createRoot(document.getElementById('root')).render(<EcommerceDashboard />);
+</script>
+</body>
+</html>
